@@ -1,0 +1,28 @@
+6. Business Impact and Recommendations
+Comparison of Missing-Value Strategies
+Deleting (dropna): Keeps only real data, but shrinks the dataset. Dropping rows with missing CustomerID alone removes 64,000 rows (28%), which could skew revenue and country totals if missingness isn't random.
+
+Filling with mean/median: Keeps all rows, but fabricates values. Doesn't apply to CustomerID (an ID can't be averaged). For Quantity/UnitPrice, median is safer than mean, since retail data is often right-skewed and the mean would be pulled up by bulk/high-value orders.
+
+Strategy by Column
+Column	Strategy	Why
+CustomerID	Leave missing / label "Guest"	It's an ID, not a value — can't be averaged, and filling it fakes a customer
+Quantity / UnitPrice	Drop (dropna)	Only ~1 row affected, and revenue can't be computed without both
+Description	Fill with "Unknown"	Low impact on revenue/location analysis
+Effect on Business Decisions
+Dropping CustomerID rows understates revenue in countries with more guest checkouts, making those regions look weaker than they are.
+Filling with the mean can overstate "typical" order value, leading to wrong conclusions about customer spend or regional performance.
+Median keeps revenue-by-country figures more reliable for budgeting decisions.
+Preventing Recurrence
+Require CustomerID or an explicit "Guest" flag at checkout.
+Validate Quantity/UnitPrice as numeric and positive at entry.
+Enforce column data types at the database/API level.
+Run automated data-quality checks before data reaches analytics.
+Use a dropdown for Country/City instead of free text.
+Common Causes and Fixes
+Cause	Fix
+Typos/inconsistent casing in text fields	Standardize with str.strip()/str.title(); use dropdowns
+Numbers stored as text	Validate and cast types at ingestion, not just analysis
+Optional fields left blank	Make required, or auto-generate a default (e.g. guest ID)
+Duplicate records from retries	Add a unique constraint/idempotency key
+Returns mixed in with sales as negative quantity	Use a separate status column for returns
